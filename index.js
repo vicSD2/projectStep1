@@ -49,8 +49,8 @@ function checkBal(addr1) {
 	var localBalance = web3.eth.getBalance(addr1);
 	
 	while(true){
-		//setTimeout(monitorAddress(addr,localBalance), 15000);
-		monitorAddress(addr,localBalance);
+		setTimeout(monitorAddress(addr,localBalance), 15000);
+		//monitorAddress(addr,localBalance);
 		localBalance = web3.eth.getBalance(addr);
 		}
 	}
