@@ -48,12 +48,11 @@ function checkBal(addr1) {
 	var addr = addr1;
 	var localBalance = web3.eth.getBalance(addr1);
 	
-	while(true){
-		setTimeout(monitorAddress(addr,localBalance), 15000);
-		//monitorAddress(addr,localBalance);
-		localBalance = web3.eth.getBalance(addr);
-		}
-	}
+	setTimeout(function () {monitorAddress(addr,localBalance)}, 1000);
+	//monitorAddress(addr,localBalance);
+	localBalance = web3.eth.getBalance(addr);
+		
+}
 
 function monitorAddress(addr,localBal) {
 	var addy = addr;
