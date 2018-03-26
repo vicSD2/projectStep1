@@ -46,19 +46,20 @@ function sendRaw(rawTx) {
 // checks every 15s for money in account and who sent it
 function checkBal(addr1) {
 	var addr = addr1;
-	var localBalance = web3.eth.getBalance(addr1);
+	var localBalance = web3.eth.getBalance(addr1); //Current balance at that moment.
 	
-	setTimeout(function () {monitorAddress(addr,localBalance)}, 1000);
+	setTimeout(function () {monitorAddress(addr,localBalance)}, 1000); //Keep it runing every second
 	//monitorAddress(addr,localBalance);
-	localBalance = web3.eth.getBalance(addr);
+	localBalance = web3.eth.getBalance(addr); //Update balance after it checks it in case it changed.
 		
 }
 
 function monitorAddress(addr,localBal) {
 	var addy = addr;
 	var localBalance= localBal;
-	if(localBalance!= web3.eth.getBalance(addy)){
-		console.log('Transaction Occurred');
+	if(localBalance!= web3.eth.getBalance(addy)){ //Checks the balance passed by the method with the current balance of that moment.
+		console.log('Transaction Occurred'); 
+		//Will always output this because for some reason the balance is read as a junk value??
 		//Send signal through GPIO to enable the relays
 	}
 	else {
