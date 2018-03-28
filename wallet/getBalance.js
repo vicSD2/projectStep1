@@ -1,5 +1,4 @@
-
-//console.log(process.argv[2])
+//argv[0]: node, argv[1]: command, argv[2]: target address
 
 if (!process.argv[2]) {
     console.log("Missing Address");
@@ -21,8 +20,8 @@ if (!process.argv[2]) {
     // Use Wb3 to get the balance of the address, convert it and then show it in the console.
     web3.eth.getBalance(addr, function(error, result) {
         if (!error)
-            console.log('Ether:', web3.utils.fromWei(result, 'ether')); // Show the ether balance after converting it from Wei
+            console.log('Ether:', web3.utils.fromWei(result, 'ether')); // Show the ether balance after converting it from Wei, be sure to change it to our respective unit of token.
         else
-            console.log('Huston we have a promblem: ', error); // Should dump errors here
+            console.log('Houston we have a problem: ', error); // Should dump errors here
     });
 }
