@@ -12,7 +12,8 @@ For an explanation of this code, navigate to the wiki https://github.com/ThatOth
 var Web3 = require('web3');
 
 // Show web3 where it needs to look for the Ethereum node.
-web3 = new Web3(new Web3.providers.HttpProvider('https://rinkeby.infura.io/YOUR-API-TOKEN-HERE'));
+web3 = new Web3(new Web3.providers.HttpProvider('https://rinkeby.infura.io/sPHjtjaDwLBgYyXQL6Ps'));
+//web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 
 // An extra module is required for this, use npm to install before running
 var Tx = require('ethereumjs-tx');
@@ -30,6 +31,26 @@ if (!process.argv[3]) {
     console.log("Amount");
 }
 
+var txValue = web3.utils.numberToHex(web3.utils.toWei(process.argv[3], 'ether'));
+var receivingAddr = (process.argv[2]); // '0xb2d180dc3c55e57783c0351fd0279d779aa63286'
+
+web3.eth.getTransactionCount(pubKey).then((nonce) => {
+  var tx = new Tx({
+    nonce: nonce,
+    from: pubKey, 
+    to: receivingAddr, 
+    value: txValue, 
+    gasLimit: 22000,
+    chainId: 4,
+    gasPrice:50000
+  });
+  tx.sign(privateKey);
+  web3.eth.sendSignedTransaction('0x'+tx.serialize().toString('hex')).then((response) => {
+     console.log(response);
+  });
+});
+
+/*
 var number = web3.eth.getTransactionCount(pubKey);
 
 number.then(function(numb) {
@@ -42,14 +63,15 @@ number.then(function(numb) {
 
     // Data to be sent in transaction, converted into a hex value. Normal tx's do not need this and use '0x' as default, but who wants to be normal?
     var txData = web3.utils.asciiToHex('oh hai vic');
-
+    console.log(numb);
     var rawTx = {
         nonce: "0x"+numb, // Nonce is the times the address has transacted, should always be higher than the last nonce 0x0#
         gasPrice: '0x14f46b0400', // Normal is '0x14f46b0400' or 90 GWei
         gasLimit: '0x55f0', // Limit to be used by the transaction, default is '0x55f0' or 22000 GWei
         to: receivingAddr, // The receiving address of this transaction
         value: txValue, // The value we are sending '0x16345785d8a0000' which is 0.1 Ether
-        data: txData // The data to be sent with transaction, '0x6f6820686169206d61726b' or 'oh hai mark' 
+        data: txData, // The data to be sent with transaction
+        chainId: 1337
     }
 
     //console.log(rawTx); // This is used for testing to see if the rawTx was formmated created properly, comment out the code below to use.
@@ -61,8 +83,9 @@ number.then(function(numb) {
     var serializedTx = tx.serialize(); // Clean things up a bit
 
     console.log(serializedTx.toString('hex')); // Log the resulting raw transaction hex for debugging if it fails to send
-
+    //console.log("https://rinkeby.etherscan.io/tx/" + '0x' + serializedTx.toString('hex'))
     web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')) // Broadcast the transaction to the network
         .on('receipt', console.log); // When a receipt is issued, log it to the console
-
 });
+
+*/
