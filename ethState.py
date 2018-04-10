@@ -15,6 +15,7 @@ key = '4415ad17a0445b70514322a25a05e9b31d458a0b6fa73c1d7ff3ea3286677d7b'
 nodeBAddr = '0x8a0e3931463b71050033253af4e5e35a95b19b38'
 nodeCAddr = '0x2b84b4d2c6feb31232b5f6a0d39eb132fe67dcda'
 # Below is equivalent to ethTransaction() from nodeState.js
+energyNeeded = True
 def send_eth(from_addr, to_addr, eth_amount, gas_limit, gas_price):
     nonce = w.eth.getTransactionCount(w.toChecksumAddress(from_addr))
     transaction = {
@@ -28,19 +29,19 @@ def send_eth(from_addr, to_addr, eth_amount, gas_limit, gas_price):
     }
     signed_transaction = w.eth.account.signTransaction(transaction, key)
     transaction_id = w.eth.sendRawTransaction(signed_transaction.rawTransaction)
-    print ('\nhttps://etherscan.io/tx/{0}'.format(transaction_id.hex()))
+    print ('\nhttps://rinkeby.etherscan.io/tx/{0}'.format(transaction_id.hex()))
 
 # Below is equivalent to the getBalance from nodeState.js
 def check_bal(from_addr):
     weibalance = w.eth.getBalance(w.toChecksumAddress(from_addr)) #Checks balance in Wei
-    balance = web3.fromWei(weibalance,'ether') #Converts Wei balance to ether
+    balance = w.fromWei(weibalance,'ether') #Converts Wei balance to ether
     print ("the balance is " + str(balance))
     return balance
 
 def idle():
     print ("Checking Node Balance......")
     print ("Checking Battery Levels....")
-    energyNeeded = True #check_batt() goes here
+   # energyNeeded = True #check_batt() goes here
 
     #If there is a positive change in balance then perform the transfer.
     if currentBalance < check_bal(from_addr):
@@ -62,10 +63,10 @@ def idle():
     else:
         print ('No change detected, no energy needed.')
 
-def triggerPyScript(amt_received):
-
+#def triggerPyScript(amt_received):
 
 while True:
     currentBalance = check_bal(from_addr)
     idle()
+    energyNeeded = False
     time.sleep(10)
