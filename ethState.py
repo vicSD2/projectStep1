@@ -1,6 +1,8 @@
 import os,sys
 import web3
 import time
+from pyfirmata import Arduino, util
+relayBoard = Arduino('/dev/ttyUSB0')
 
 w = web3.Web3(web3.HTTPProvider('https://rinkeby.infura.io/12345678'))
 w.eth.enable_unaudited_features()
@@ -63,7 +65,15 @@ def idle():
     else:
         print ('No change detected, no energy needed.')
 
-#def triggerPyScript(amt_received):
+def triggerPyScript(amt_received):
+    pin3 = relayBoard.getPin('d:3:o')
+    currency = amt_received
+    transferTime = currency*60
+    #Since charge time was tested at approximately 17W per second,currency rate is set at 1 Eth per kW
+    pin3.write(1)
+    time.sleep(transferTime)
+    pin3.write(0)
+
 
 while True:
     currentBalance = check_bal(from_addr)
