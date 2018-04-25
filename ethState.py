@@ -1,23 +1,34 @@
 import os,sys
 import web3
 import time
+import socket
+import threading
 from pyfirmata import Arduino, util
-relayBoard = Arduino('/dev/ttyUSB0')
-it = util.Iterator(relayBoard)
+
+relayBoard = Arduino('/dev/ttyACM0') #Remember to upload the StandardFirmata program in the arduino and change the port
+it = util.Iterator(relayBoard) #Declare iterator 
+it.start() #Start the iterator to read
 
 w = web3.Web3(web3.HTTPProvider('https://rinkeby.infura.io/12345678'))
-w.eth.enable_unaudited_features()
-# gas example
-gas_limit = 250000
-gas_price = 60
-#to_addr = '0x2b84b4d2c6feb31232b5f6a0d39eb132fe67dcda'
-from_addr = '0x577d0be430fca2b0331f5b1dcc2ee21962c4b0df' #Node A
-key = '4415ad17a0445b70514322a25a05e9b31d458a0b6fa73c1d7ff3ea3286677d7b'
+w.eth.enable_unaudited_features() #Enable web3 features
+
+gas_limit = 250000 #Adjust when necessary
+gas_price = 60 #Ditto
+
+from_addr = '0x577d0be430fca2b0331f5b1dcc2ee21962c4b0df' #Node A recipient address
+key = '4415ad17a0445b70514322a25a05e9b31d458a0b6fa73c1d7ff3ea3286677d7b' #private key
+
 #Every node will have the rest of the addresses.
 nodeBAddr = '0x8a0e3931463b71050033253af4e5e35a95b19b38'
 nodeCAddr = '0x2b84b4d2c6feb31232b5f6a0d39eb132fe67dcda'
-# Below is equivalent to ethTransaction() from nodeState.js
-minThreshold = 11.4
+targetNode  = ''
+minThreshold = 11.4 #minimum battery voltage to compare to before deciding to charge
+energyNeeded = True #If value is hardcoded to True, it is for testing purposes.
+
+relay1Pin = relayBoard.get_pin('d:2:o') #Declares the digital output pin 2 of the Arduino for relay. Remember to change according to designated pin
+relay1Pin.write(0) #Default state must be switched off
+
+#Sends ether from one account to another, takes recipient and sender address, ether amount, gas limit and price.
 def send_eth(from_addr, to_addr, eth_amount, gas_limit, gas_price):
     nonce = w.eth.getTransactionCount(w.toChecksumAddress(from_addr))
     transaction = {
@@ -33,35 +44,35 @@ def send_eth(from_addr, to_addr, eth_amount, gas_limit, gas_price):
     transaction_id = w.eth.sendRawTransaction(signed_transaction.rawTransaction)
     print ('\nhttps://rinkeby.etherscan.io/tx/{0}'.format(transaction_id.hex()))
 
-# Below is equivalent to the getBalance from nodeState.js
+# Checks account balance to look out for transactions.
 def check_bal(from_addr):
     weibalance = w.eth.getBalance(w.toChecksumAddress(from_addr)) #Checks balance in Wei
     balance = w.fromWei(weibalance,'ether') #Converts Wei balance to ether
-    print ("the balance is " + str(balance))
+    print ("The current balance is " + str(balance))
     return balance
 
 def idle():
     print ("Checking Node Balance......")
     print ("Checking Battery Levels....")
-    energyNeeded = energyCheck()
+    #energyNeeded = energyCheck()
 
     #If there is a positive change in balance then perform the transfer.
-    if currentBalance < check_bal(from_addr):
+    if  True: #currentBalance < check_bal(from_addr):
         print ("Deposit detected, beginning transfer now.")
-        amt_received = check_bal(from_addr) - currentBalance
+        amt_received = 0.1 #check_bal(from_addr) - currentBalance
         triggerRelays(amt_received)
         print ("We received " + str(amt_received))
       
     elif energyNeeded:
-        #socketProgram will find appropriate vendor
-        #socketProgram will return appropriate price
-        price = 0.1
-        targetNodeAddr = 'C' #socketProgram will set this value. Currently test value.
+        clientScript()#socketProgram will find appropriate vendor & price
+        #targetNodeAddr = 'C' socketProgram will set this value. Currently test value.
 
         if targetNodeAddr == 'B':
-            send_eth(from_addr,nodeBAddr,price,gas_limit,gas_price)
+            #send_eth(from_addr,nodeBAddr,price,gas_limit,gas_price)
+            print('Transaction Made')
         else:
-            send_eth(from_addr,nodeCAddr,price,gas_limit,gas_price)
+            #send_eth(from_addr,nodeCAddr,price,gas_limit,gas_price)
+            print('Transaction Made')
     else:
         print ('No change detected, no energy needed.')
 
@@ -82,20 +93,32 @@ def energyCheck():
 	else:
 		return True
 	
-
+def clientScript():
+	
 def triggerRelays(amt_received):
-    pin3 = relayBoard.get_pin('d:3:o') #Change according to designated pin
     currency = amt_received
     transferTime = currency*60
     #Since charge time was tested at approximately 17W per second,currency rate is set at 1 Eth per kW
-    pin3.write(1)
+    relay1Pin.write(1)
     time.sleep(transferTime)
-    pin3.write(0)
+    relay1Pin.write(0)
     print ('Energy Transfer Complete.')
 
+def new_client(c_socket,addr):
+   b= None   
+   print ('Got connection from', addr)
+   while b!= 'end':
+   # send a thank you message to the client. 
+     b=c.recv(1024).decode()
+     print(b)     
+     a = input('Enter your input:')
+     c.sendall(a.encode('utf-8'))
+     if(a == 'end'):
+      break
+   c_socket.close()
 
 while True:
-	it.start()
-    currentBalance = check_bal(from_addr)
-    idle()
-    time.sleep(10)
+	currentBalance = check_bal(from_addr)
+	idle()
+	energyNeeded = False
+	time.sleep(10)
