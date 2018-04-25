@@ -22,7 +22,8 @@ key = '4415ad17a0445b70514322a25a05e9b31d458a0b6fa73c1d7ff3ea3286677d7b' #privat
 nodeBAddr = '0x8a0e3931463b71050033253af4e5e35a95b19b38'
 nodeCAddr = '0x2b84b4d2c6feb31232b5f6a0d39eb132fe67dcda'
 targetNode  = ''
-minThreshold = 11.4 #minimum battery voltage to compare to before deciding to charge
+minThreshold = 11.5 #minimum battery voltage to compare to before deciding to buy 
+sellThreshold = 13.5 #minimum battery voltage to compare to before deciding to sell
 energyNeeded = True #If value is hardcoded to True, it is for testing purposes.
 
 relay1Pin = relayBoard.get_pin('d:2:o') #Declares the digital output pin 2 of the Arduino for relay. Remember to change according to designated pin
@@ -54,7 +55,8 @@ def check_bal(from_addr):
 def idle():
     print ("Checking Node Balance......")
     print ("Checking Battery Levels....")
-    #energyNeeded = energyCheck()
+    energyNeeded = energyCheck()
+    
 
     #If there is a positive change in balance then perform the transfer.
     if  True: #currentBalance < check_bal(from_addr):
@@ -104,6 +106,25 @@ def triggerRelays(amt_received):
     relay1Pin.write(0)
     print ('Energy Transfer Complete.')
 
+def sellScript():
+	s = socket.socket()
+	print ("Socket successfully created")
+	port = 12348
+	s.bing(('',port))
+	print ("Socket bound to %s" %(port))
+	s.listen(5)
+	print("Socket is listening...")
+	count = 0
+	offerFound = False
+	while !offerFound:
+		if(threading.active_count() == 1):
+			c, addr = s.accept()
+			t = threading.Thread(target = new_client, args = (c, addr, ))
+			t.start()
+			count += 1
+	print ("Available buyer found, closing socket.")	
+	s.close()
+	
 def new_client(c_socket,addr):
    b= None   
    print ('Got connection from', addr)
