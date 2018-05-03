@@ -9,6 +9,9 @@ it = util.Iterator(relayBoard)
 # Declare iterator
 it.start()
 # Start the iterator to read
+analogVolt = relayBoard.get_pin('a:3:i')
+# Change according to the designated pin
+analogVolt.enable_reporting()
 
 w = web3.Web3(web3.HTTPProvider('https://rinkeby.infura.io/12345678'))
 w.eth.enable_unaudited_features()
@@ -24,19 +27,21 @@ from_addr = '0x577d0be430fca2b0331f5b1dcc2ee21962c4b0df'
 key = '4415ad17a0445b70514322a25a05e9b31d458a0b6fa73c1d7ff3ea3286677d7b'
 # private key
 # Every node will have the rest of the addresses.
-nodeAIP = ''
-nodeBIP = '192.168.137.185'
-nodeCIP = '192.168.137.189'
+nodeAIP = '192.168.137.119'
+nodeBIP = '192.168.137.191'
+nodeCIP = '192.168.137.153'
 nodeBAddr = '0x8a0e3931463b71050033253af4e5e35a95b19b38'
 nodeCAddr = '0x2b84b4d2c6feb31232b5f6a0d39eb132fe67dcda'
 targetNode = ''
-selfNode = 'A'
+selfNode = 'B'
 # Change depending on node!
 volts_requested = None
 openTime = 0
-minThreshold = 12.5
+minThreshold = 11
+# 12.5
 # minimum battery voltage to compare to before deciding to buy
-sellThreshold = 13.5
+sellThreshold = 12
+# 13.5
 # minimum battery voltage to compare to before deciding to sell
 energyNeeded = None
 # If value is hardcoded to True, it is for testing purposes.
@@ -155,11 +160,10 @@ def energyCheck():
     sampleCount = 0
     voltSum = 0
     digitalVolt = 0
-    analogVolt = relayBoard.get_pin('a:3:i')
-    # Change according to the designated pin
-    analogVolt.enable_reporting()
+    time.sleep(1)
     while sampleCount < num_samples:
-        sample = analogVolt.read()*48.13
+        sample = analogVolt.read()*48.4
+        print(sample)
         voltSum += sample
         sampleCount += 1
         time.sleep(10)
@@ -194,12 +198,12 @@ def clientScript(volts_needed, selfN):
                 print('connection refused, reattempting in 10s')
                 time.sleep(10)
                 status = False
-            raise
     b = None
+    b = s.recv(1024).decode()
+    time.sleep(1)
     # receive data from the server
     while b != 'end':
         # send a thank you message to the client.
-        b = s.recv(1024).decode()
         print(b)
         if(b == 'Amount Requested: '):
             a = input(volts_needed)
@@ -230,7 +234,7 @@ def clientScript(volts_needed, selfN):
             s.sendall(a.encode('utf-8'))
         else:
             targetNode = ''
-
+        b = s.recv(1024).decode()
     # close the connection
     openTime = int(volts_needed/0.000558333)
     s.close()
@@ -281,10 +285,10 @@ def sellScript():
         print ('Got connection from', addr)
         a = input('Connection Established')
         c_socket.sendall(a.encode('utf-8'))
-
+        b = c_socket.recv(1024).decode()
         while b != 'end':
             # send a thank you message to the client.
-            b = c_socket.recv(1024).decode()
+            
             print(b)
             incoming = int(b)
             if (incoming > 2.5):
@@ -369,24 +373,25 @@ def sellScript():
                 a = input('Amount Requested: ')
                 c_socket.sendall(a.encode('utf-8'))
             if(b == 'end'):
+                print('Connection Closed')
                 c_socket.close()
                 break
+            b = c_socket.recv(1024).decode()
         c_socket.close()
     s = socket.socket()
     print ("Socket successfully created")
     port = 12345
-    s.bing(('', port))
+    s.bind(('', port))
     print ("Socket bound to %s" % (port))
     s.listen(5)
     print("Socket is listening...")
     count = 0
     offerFound = False
     while not offerFound:
-        if(threading.active_count() == 1):
+        if(threading.active_count() == 2):
             c, addr = s.accept()
             t = threading.Thread(target=new_client, args=(c, addr, ))
             t.start()
-            count += 1
     print ("Available buyer found, closing socket.")
     s.close()
 
