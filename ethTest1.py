@@ -1,7 +1,6 @@
 import web3
 import time
 import socket
-import threading
 from pyfirmata import Arduino, util
 
 relayBoard = Arduino('/dev/ttyACM0')
@@ -275,6 +274,8 @@ def triggerRelaysSND(v_requested, destNode):
 
 
 def sellScript():
+    global targetNode
+
     def new_client(c_socket, addr):
         global targetNode
         global volts_requested
@@ -288,7 +289,7 @@ def sellScript():
         b = c_socket.recv(1024).decode()
         while b != 'end':
             # send a thank you message to the client.
-            
+
             print(b)
             incoming = int(b)
             if (incoming > 2.5):
@@ -385,13 +386,10 @@ def sellScript():
     print ("Socket bound to %s" % (port))
     s.listen(5)
     print("Socket is listening...")
-    count = 0
     offerFound = False
     while not offerFound:
-        if(threading.active_count() == 2):
-            c, addr = s.accept()
-            t = threading.Thread(target=new_client, args=(c, addr, ))
-            t.start()
+        c, addr = s.accept()
+        new_client(c, addr)
     print ("Available buyer found, closing socket.")
     s.close()
 
