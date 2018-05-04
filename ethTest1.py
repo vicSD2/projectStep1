@@ -24,11 +24,20 @@ gas_price = 60
 from_addr = '0x577d0be430fca2b0331f5b1dcc2ee21962c4b0df'
 # Node A recipient address
 key = '4415ad17a0445b70514322a25a05e9b31d458a0b6fa73c1d7ff3ea3286677d7b'
-# private key
+# private key A
+from_addr = '0x8a0e3931463b71050033253af4e5e35a95b19b38'
+# Node B recipient address
+key = '82f7a41925b65cd45338989c3aa16967cd08632934eeef39dc302ac0ed40c026'
+# private key B
+from_addr = '0x2b84b4d2c6feb31232b5f6a0d39eb132fe67dcda'
+# Node C recipient address
+key = 'cf7aeeaadef5ff79522a0aba0f66d917df28824bd49f010894fa0026583c1982'
+# private key C
 # Every node will have the rest of the addresses.
 nodeAIP = '192.168.137.66'
 nodeBIP = '192.168.137.39'
 nodeCIP = '192.168.137.245'
+nodeAAddr = '0x577d0be430fca2b0331f5b1dcc2ee21962c4b0df'
 nodeBAddr = '0x8a0e3931463b71050033253af4e5e35a95b19b38'
 nodeCAddr = '0x2b84b4d2c6feb31232b5f6a0d39eb132fe67dcda'
 targetNode = ''
@@ -88,6 +97,7 @@ def idle():
     global targetNode
     global openTime
     print ("Checking Node Balance......")
+    print(check_bal(from_addr))
     print ("Checking Battery Levels....")
 
     currentVoltage = energyCheck()
@@ -138,15 +148,15 @@ def idle():
 
         if targetNode == 'A':
             # remember to change
-            # send_eth(from_addr,nodeBAddr,price,gas_limit,gas_price)
+            send_eth(from_addr,nodeBAddr,price,gas_limit,gas_price)
             print('Transaction Made')
             targetNode = ''
         elif targetNode == 'B':
-            # send_eth(from_addr,nodeCAddr,price,gas_limit,gas_price)
+            send_eth(from_addr,nodeCAddr,price,gas_limit,gas_price)
             print('Transaction Made')
             targetNode = ''
         else:
-            # send_eth(from_addr,nodeCAddr,price,gas_limit,gas_price)
+            send_eth(from_addr,nodeCAddr,price,gas_limit,gas_price)
             print('Transaction Made')
             targetNode = ''
     elif check_bal(from_addr) < 0.5:
