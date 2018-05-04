@@ -145,7 +145,7 @@ def idle():
         time.sleep(openTime)
         relay5Pin.write(0)
         relay2Pin.write(0)
-
+        price = volts
         if targetNode == 'A':
             # remember to change
             send_eth(from_addr,nodeBAddr,price,gas_limit,gas_price)
