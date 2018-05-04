@@ -26,17 +26,17 @@ from_addr = '0x577d0be430fca2b0331f5b1dcc2ee21962c4b0df'
 key = '4415ad17a0445b70514322a25a05e9b31d458a0b6fa73c1d7ff3ea3286677d7b'
 # private key
 # Every node will have the rest of the addresses.
-nodeAIP = '192.168.137.119'
-nodeBIP = '192.168.137.191'
-nodeCIP = '192.168.137.153'
+nodeAIP = '192.168.137.66'
+nodeBIP = '192.168.137.39'
+nodeCIP = '192.168.137.245'
 nodeBAddr = '0x8a0e3931463b71050033253af4e5e35a95b19b38'
 nodeCAddr = '0x2b84b4d2c6feb31232b5f6a0d39eb132fe67dcda'
 targetNode = ''
-selfNode = 'B'
+selfNode = 'C'
 # Change depending on node!
 volts_requested = None
 openTime = 0
-minThreshold = 11
+minThreshold = 11.89
 # 12.5
 # minimum battery voltage to compare to before deciding to buy
 sellThreshold = 12
@@ -107,8 +107,9 @@ def idle():
         targetNode = ''
 
     elif energyNeeded and check_bal(from_addr) > 0.1:
-        volts = 13.5 - currentVoltage
-        openTime = clientScript(volts, selfNode)
+        volts = 0.2
+        # volts = 12.5 - currentVoltage
+        clientScript(volts, selfNode)
         # socketProgram will find appropriate vendor & price
         relay2Pin.write(1)
         relay5Pin.write(0)
@@ -205,31 +206,31 @@ def clientScript(volts_needed, selfN):
         # send a thank you message to the client.
         print(b)
         if(b == 'Amount Requested: '):
-            a = input(volts_needed)
+            a = str(volts_needed)
             s.sendall(a.encode('utf-8'))
         elif(b == 'Name the energy destination node: '):
-            a = input(selfN)
+            a = selfN
             s.sendall(a.encode('utf-8'))
         elif(b == 'Confirmed. Terminate Session?'):
-            a = input('end')
+            a = 'end'
             s.sendall(a.encode('utf-8'))
         elif(b == 'Connection Established'):
-            a = input('Connection Confirmed')
+            a = 'Connection Confirmed'
             s.sendall(a.encode('utf-8'))
         elif(b == 'B'):
             targetNode = 'B'
-            a = input('Received')
+            a = 'Received'
             s.sendall(a.encode('utf-8'))
         elif(b == 'A'):
             targetNode = 'A'
-            a = input('Received')
+            a = 'Received'
             s.sendall(a.encode('utf-8'))
         elif(b == 'C'):
             targetNode = 'C'
-            a = input('Received')
+            a = 'Received'
             s.sendall(a.encode('utf-8'))
         elif(b == 'Confirmed. Standby for payment destination:'):
-            a = input('OK')
+            a = 'OK'
             s.sendall(a.encode('utf-8'))
         else:
             targetNode = ''
@@ -284,101 +285,108 @@ def sellScript():
         incoming = None
         volts_requested = 0
         print ('Got connection from', addr)
-        a = input('Connection Established')
+        a = 'Connection Established'
         c_socket.sendall(a.encode('utf-8'))
         b = c_socket.recv(1024).decode()
         while b != 'end':
             # send a thank you message to the client.
-
             print(b)
-            incoming = int(b)
-            if (incoming > 2.5):
-                a = input('The amount too high, select a smaller amount: ')
+            if(b == 'Connection Confirmed'):
+                a = 'Amount Requested: '
                 c_socket.sendall(a.encode('utf-8'))
-                # prints the message above
-            elif (incoming < 2.5 and incoming > 0):
-                volts_requested = incoming
-                a = input('Name the energy destination node: ')
-                # call to select target node, etc
-                c_socket.sendall(a.encode('utf-8'))
-                # prints the message above
-                time.sleep(2)
-                incomingNode = c_socket.recv(1024).decode()
-                if(incomingNode == 'A'):
-                    targetNode = 'A'
-                    a = input('Confirmed. Standby for payment destination:')
+                b = c_socket.recv(1024).decode()
+                incoming = float(b)
+                if (incoming > 2.5):
+                    a = 'The amount too high, select a smaller amount: '
                     c_socket.sendall(a.encode('utf-8'))
+                    # prints the message above
+                elif(incoming < 2.5 and incoming > 0):
+                    volts_requested = incoming
+                    a = 'Name the energy destination node: '
+                    # call to select target node, etc
+                    c_socket.sendall(a.encode('utf-8'))
+                    # prints the message above
                     time.sleep(2)
-                    confirmation = c_socket.recv(1024).decode()
-                    if(confirmation == 'OK'):
-                        a = input(selfNode)
+                    incomingNode = c_socket.recv(1024).decode()
+                    if(incomingNode == 'A'):
+                        targetNode = 'A'
+                        a = 'Confirmed. Standby for payment destination:'
                         c_socket.sendall(a.encode('utf-8'))
                         time.sleep(2)
                         confirmation = c_socket.recv(1024).decode()
-                        if(confirmation == 'Received'):
-                            a = input('Confirmed. Terminate Session?')
+                        if(confirmation == 'OK'):
+                            a = selfNode
                             c_socket.sendall(a.encode('utf-8'))
-                            # prints the message above
                             time.sleep(2)
                             confirmation = c_socket.recv(1024).decode()
-                            offerFound = True
-                            if(confirmation == 'end'):
-                                a = 'end'
-                                b = 'end'
+                            if(confirmation == 'Received'):
+                                a = 'Confirmed. Terminate Session?'
                                 c_socket.sendall(a.encode('utf-8'))
-                elif(incomingNode == 'B'):
-                    targetNode = 'B'
-                    a = input('Confirmed. Standby for payment destination:')
-                    c_socket.sendall(a.encode('utf-8'))
-                    time.sleep(2)
-                    confirmation = c_socket.recv(1024).decode()
-                    if(confirmation == 'OK'):
-                        a = input(selfNode)
+                                # prints the message above
+                                time.sleep(2)
+                                confirmation = c_socket.recv(1024).decode()
+                                print(confirmation)
+                                offerFound = True
+                                if(confirmation == 'end'):
+                                    a = 'end'
+                                    b = 'end'
+                                    c_socket.sendall(a.encode('utf-8'))
+                                    c_socket.close()
+                                    print('Connection Closed')
+                                    return True
+                    elif(incomingNode == 'B'):
+                        targetNode = 'B'
+                        a = 'Confirmed. Standby for payment destination:'
                         c_socket.sendall(a.encode('utf-8'))
                         time.sleep(2)
                         confirmation = c_socket.recv(1024).decode()
-                        if(confirmation == 'Received'):
-                            a = input('Confirmed. Terminate Session?')
+                        if(confirmation == 'OK'):
+                            a = selfNode
                             c_socket.sendall(a.encode('utf-8'))
-                            # prints the message above
                             time.sleep(2)
                             confirmation = c_socket.recv(1024).decode()
-                            offerFound = True
-                            if(confirmation == 'end'):
-                                a = 'end'
-                                b = 'end'
+                            if(confirmation == 'Received'):
+                                a = 'Confirmed. Terminate Session?'
                                 c_socket.sendall(a.encode('utf-8'))
-                elif(incomingNode == 'C'):
-                    targetNode = 'C'
-                    a = input('Confirmed. Standby for payment destination:')
-                    c_socket.sendall(a.encode('utf-8'))
-                    time.sleep(2)
-                    confirmation = c_socket.recv(1024).decode()
-                    if(confirmation == 'OK'):
-                        a = input(selfNode)
+                                # prints the message above
+                                time.sleep(2)
+                                confirmation = c_socket.recv(1024).decode()
+                                print(confirmation)
+                                offerFound = True
+                                if(confirmation == 'end'):
+                                    a = 'end'
+                                    b = 'end'
+                                    c_socket.sendall(a.encode('utf-8'))
+                                    c_socket.close()
+                                    print('Connection Closed')
+                                    return True
+                    elif(incomingNode == 'C'):
+                        targetNode = 'C'
+                        a = 'Confirmed. Standby for payment destination:'
                         c_socket.sendall(a.encode('utf-8'))
                         time.sleep(2)
                         confirmation = c_socket.recv(1024).decode()
-                        if(confirmation == 'Received'):
-                            a = input('Confirmed. Terminate Session?')
+                        if(confirmation == 'OK'):
+                            a = selfNode
                             c_socket.sendall(a.encode('utf-8'))
-                            # prints the message above
                             time.sleep(2)
                             confirmation = c_socket.recv(1024).decode()
-                            offerFound = True
-                            if(confirmation == 'end'):
-                                a = 'end'
-                                b = 'end'
+                            if(confirmation == 'Received'):
+                                a = 'Confirmed. Terminate Session?'
                                 c_socket.sendall(a.encode('utf-8'))
-            elif(b == 'Connection Confirmed'):
-                a = input('Amount Requested: ')
-                c_socket.sendall(a.encode('utf-8'))
-            if(b == 'end'):
-                print('Connection Closed')
-                c_socket.close()
-                break
-            b = c_socket.recv(1024).decode()
-        c_socket.close()
+                                # prints the message above
+                                time.sleep(2)
+                                confirmation = c_socket.recv(1024).decode()
+                                print(confirmation)
+                                offerFound = True
+                                if(confirmation == 'end'):
+                                    a = 'end'
+                                    b = 'end'
+                                    c_socket.sendall(a.encode('utf-8'))
+                                    c_socket.close()
+                                    print('Connection Closed')
+                                    return True
+                                
     s = socket.socket()
     print ("Socket successfully created")
     port = 12345
@@ -389,7 +397,7 @@ def sellScript():
     offerFound = False
     while not offerFound:
         c, addr = s.accept()
-        new_client(c, addr)
+        offerFound = new_client(c, addr)
     print ("Available buyer found, closing socket.")
     s.close()
 
